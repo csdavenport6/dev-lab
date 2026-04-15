@@ -1,6 +1,4 @@
-do_token     = "your-digitalocean-api-token"
+# do_token is read from TF_VAR_do_token environment variable
+# e.g.: set -x TF_VAR_do_token (op read "op://Personal/DigitalOcean API Token/credential")
 ssh_key_name = "your-ssh-key-name"
 repo_url     = "https://github.com/connordavenport/dev-lab.git"
-# droplet_region = "nyc1"
-# droplet_size   = "s-1vcpu-1gb"
-# username       = "connor"

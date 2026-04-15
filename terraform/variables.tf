@@ -12,13 +12,13 @@ variable "ssh_key_name" {
 variable "droplet_region" {
   description = "DigitalOcean region slug"
   type        = string
-  default     = "nyc1"
+  default     = "sfo3"
 }
 
 variable "droplet_size" {
   description = "DigitalOcean droplet size slug"
   type        = string
-  default     = "s-1vcpu-1gb"
+  default     = "s-1vcpu-2gb"
 }
 
 variable "droplet_image" {
