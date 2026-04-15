@@ -43,3 +43,20 @@ func TestParsePostMissingFile(t *testing.T) {
 func TestParsePostNoFrontmatter(t *testing.T) {
 	// Will be tested after we create the fixture in the implementation step
 }
+
+func TestLoadPosts(t *testing.T) {
+	posts, err := LoadPosts("testdata")
+	if err != nil {
+		t.Fatalf("LoadPosts returned error: %v", err)
+	}
+	if len(posts) != 2 {
+		t.Fatalf("got %d posts, want 2", len(posts))
+	}
+	// Should be sorted by date descending — second-post (Feb) before valid-post (Jan).
+	if posts[0].Slug != "second-post" {
+		t.Errorf("first post slug = %q, want %q", posts[0].Slug, "second-post")
+	}
+	if posts[1].Slug != "test-post" {
+		t.Errorf("second post slug = %q, want %q", posts[1].Slug, "test-post")
+	}
+}
