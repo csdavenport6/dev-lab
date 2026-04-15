@@ -56,13 +56,13 @@ write_files:
       WantedBy=multi-user.target
 
 runcmd:
-  # SSH hardening
+  # SSH hardening - change port and restart before enabling firewall
   - sed -i 's/^#\?Port .*/Port ${ssh_port}/' /etc/ssh/sshd_config
   - sed -i 's/^#\?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
   - sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
-  - systemctl restart sshd
+  - systemctl restart ssh
 
-  # UFW firewall
+  # UFW firewall - only enable after SSH is on the new port
   - ufw default deny incoming
   - ufw default allow outgoing
   - ufw allow ${ssh_port}/tcp
