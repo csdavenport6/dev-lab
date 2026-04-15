@@ -1,0 +1,7 @@
+{{define "content"}}
+<article>
+    <h1>{{.Post.Title}}</h1>
+    <time datetime="{{.Post.Date.Format "2006-01-02"}}">{{.Post.Date.Format "January 2, 2006"}}</time>
+    <div class="post-content">{{safeHTML .Post.Content}}</div>
+</article>
+{{end}}

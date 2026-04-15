@@ -1,0 +1,20 @@
+{{define "layout"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{if .Title}}{{.Title}} — {{end}}cdavenport.io</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav>
+        <a href="/">cdavenport.io</a>
+    </nav>
+    <main>
+        {{template "content" .}}
+    </main>
+    <footer>
+        <p>&copy; 2026 Connor Davenport</p>
+    </footer>
+</body>
+</html>{{end}}
