@@ -1,12 +1,20 @@
 #cloud-config
 
+groups:
+  - docker
+
 users:
   - name: ${username}
-    groups: sudo, docker
+    groups:
+      - sudo
+      - docker
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
     ssh_authorized_keys:
       - ${ssh_public_key}
+
+ssh_pwauth: false
 
 package_update: true
 package_upgrade: true
@@ -22,11 +30,17 @@ packages:
   - git
 
 write_files:
+  - path: /etc/ssh/sshd_config.d/60-dev-lab.conf
+    content: |
+      Port ${ssh_port}
+      PermitRootLogin no
+      PasswordAuthentication no
+
   - path: /etc/fail2ban/jail.local
     content: |
       [sshd]
       enabled = true
-      port = ${ssh_port}
+      port = ssh,${ssh_port}
       filter = sshd
       logpath = /var/log/auth.log
       maxretry = 5
@@ -56,15 +70,13 @@ write_files:
       WantedBy=multi-user.target
 
 runcmd:
-  # SSH hardening - change port and restart before enabling firewall
-  - sed -i 's/^#\?Port .*/Port ${ssh_port}/' /etc/ssh/sshd_config
-  - sed -i 's/^#\?PermitRootLogin .*/PermitRootLogin no/' /etc/ssh/sshd_config
-  - sed -i 's/^#\?PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config
-  - systemctl restart ssh
+  # Validate the SSH drop-in before restarting so a bad config does not brick access.
+  - /bin/sh -c 'sshd -t && systemctl restart ssh'
 
-  # UFW firewall - only enable after SSH is on the new port
+  # Keep 22 open as a recovery path in case the custom port change does not apply.
   - ufw default deny incoming
   - ufw default allow outgoing
+  - ufw allow 22/tcp
   - ufw allow ${ssh_port}/tcp
   - ufw allow 80/tcp
   - ufw allow 443/tcp
