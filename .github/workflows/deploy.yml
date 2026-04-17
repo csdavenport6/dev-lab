@@ -47,8 +47,11 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s' "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
+
+      - name: Validate SSH key format
+        run: ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
 
       - name: Trust deploy host key
         env:
