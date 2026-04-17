@@ -1,19 +1,22 @@
 {{define "content"}}
 <section class="hero">
-    <p class="eyebrow">Now live on the public internet</p>
-    <h1>Warm tones, sharper edges, and a site that feels worth deploying well.</h1>
+    <p class="eyebrow">Selected Notes</p>
+    <h1>Work in Progress...</h1>
     <p class="hero-copy">
-        The blog now sits on a layered gradient field with a stronger reading surface,
-        which gives the UI enough character to justify tightening the deployment path behind it.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed posuere
+        consectetur est at lobortis. Aenean eu leo quam. Pellentesque ornare sem
+        lacinia quam venenatis vestibulum.
     </p>
 </section>
 
 <section class="post-list" aria-label="Posts">
 {{range .Posts}}
     <article class="post-card">
-        <p class="post-card__label">Essay</p>
-        <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
         <time datetime="{{.Date.Format "2006-01-02"}}">{{.Date.Format "January 2, 2006"}}</time>
+        <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
+        <p class="post-card__summary">
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis dapibus.
+        </p>
     </article>
 {{end}}
 </section>

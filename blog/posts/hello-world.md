@@ -1,10 +1,12 @@
 ---
-title: "Hello, World"
+title: "Example Post"
 date: 2026-04-14
 tags: ["meta"]
 slug: "hello-world"
 ---
 
-Welcome to my blog. This site is served from a DigitalOcean droplet, provisioned with Terraform, configured with cloud-init, and running a Go server behind Caddy.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante
+venenatis dapibus posuere velit aliquet. Vestibulum id ligula porta felis euismod semper.
 
-The source code is fully reproducible — a single `terraform apply` rebuilds everything from scratch.
+Curabitur blandit tempus porttitor. Maecenas faucibus mollis interdum. Donec ullamcorper
+nulla non metus auctor fringilla.
