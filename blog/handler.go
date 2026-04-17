@@ -46,8 +46,9 @@ func NewServer(postsDir, templatesDir string) (*Server, error) {
 
 func (s *Server) HandleIndex(w http.ResponseWriter, r *http.Request) {
 	data := map[string]any{
-		"Title": "",
-		"Posts": s.posts,
+		"Title":     "",
+		"PageClass": "page-home",
+		"Posts":     s.posts,
 	}
 	if err := s.indexTemplate.ExecuteTemplate(w, "layout", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -60,8 +61,9 @@ func (s *Server) HandlePost(w http.ResponseWriter, r *http.Request) {
 	for _, p := range s.posts {
 		if p.Slug == slug {
 			data := map[string]any{
-				"Title": p.Title,
-				"Post":  p,
+				"Title":     p.Title,
+				"PageClass": "page-post",
+				"Post":      p,
 			}
 			if err := s.postTemplate.ExecuteTemplate(w, "layout", data); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -71,4 +73,16 @@ func (s *Server) HandlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.NotFound(w, r)
+}
+
+func (s *Server) HandleHealth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write([]byte("ok"))
 }

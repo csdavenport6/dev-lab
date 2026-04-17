@@ -22,6 +22,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", srv.HandleHealth)
 	mux.HandleFunc("/", srv.HandleIndex)
 	mux.HandleFunc("/posts/", srv.HandlePost)
 	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))

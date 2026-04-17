@@ -63,7 +63,8 @@ write_files:
       RemainAfterExit=yes
       User=${username}
       WorkingDirectory=/home/${username}/dev-lab
-      ExecStart=/usr/bin/docker compose up -d --build
+      Environment=SKIP_GIT_PULL=1
+      ExecStart=/home/${username}/dev-lab/scripts/deploy.sh
       ExecStop=/usr/bin/docker compose down
 
       [Install]

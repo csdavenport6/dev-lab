@@ -65,3 +65,33 @@ func TestHandlePostNotFound(t *testing.T) {
 		t.Errorf("status = %d, want %d", w.Code, http.StatusNotFound)
 	}
 }
+
+func TestHandleHealth(t *testing.T) {
+	srv := testServer(t)
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	w := httptest.NewRecorder()
+
+	srv.HandleHealth(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusOK)
+	}
+	if body := strings.TrimSpace(w.Body.String()); body != "ok" {
+		t.Fatalf("body = %q, want %q", body, "ok")
+	}
+}
+
+func TestHandleHealthMethodNotAllowed(t *testing.T) {
+	srv := testServer(t)
+	req := httptest.NewRequest(http.MethodPost, "/healthz", nil)
+	w := httptest.NewRecorder()
+
+	srv.HandleHealth(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("status = %d, want %d", w.Code, http.StatusMethodNotAllowed)
+	}
+	if allow := w.Header().Get("Allow"); allow != http.MethodGet {
+		t.Fatalf("allow header = %q, want %q", allow, http.MethodGet)
+	}
+}

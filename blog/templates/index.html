@@ -1,9 +1,20 @@
 {{define "content"}}
-<h1>Posts</h1>
+<section class="hero">
+    <p class="eyebrow">Now live on the public internet</p>
+    <h1>Warm tones, sharper edges, and a site that feels worth deploying well.</h1>
+    <p class="hero-copy">
+        The blog now sits on a layered gradient field with a stronger reading surface,
+        which gives the UI enough character to justify tightening the deployment path behind it.
+    </p>
+</section>
+
+<section class="post-list" aria-label="Posts">
 {{range .Posts}}
-<article>
-    <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
-    <time datetime="{{.Date.Format "2006-01-02"}}">{{.Date.Format "January 2, 2006"}}</time>
-</article>
+    <article class="post-card">
+        <p class="post-card__label">Essay</p>
+        <h2><a href="/posts/{{.Slug}}">{{.Title}}</a></h2>
+        <time datetime="{{.Date.Format "2006-01-02"}}">{{.Date.Format "January 2, 2006"}}</time>
+    </article>
 {{end}}
+</section>
 {{end}}

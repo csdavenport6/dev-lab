@@ -6,15 +6,24 @@
     <title>{{if .Title}}{{.Title}} — {{end}}cdavenport.io</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
-    <nav>
-        <a href="/">cdavenport.io</a>
-    </nav>
-    <main>
-        {{template "content" .}}
-    </main>
-    <footer>
-        <p>&copy; 2026 Connor Davenport</p>
-    </footer>
+<body class="{{if .PageClass}}{{.PageClass}}{{else}}page-default{{end}}">
+    <div class="page-background" aria-hidden="true">
+        <div class="page-background__orb page-background__orb--top"></div>
+        <div class="page-background__orb page-background__orb--middle"></div>
+        <div class="page-background__orb page-background__orb--accent"></div>
+        <div class="page-background__grid"></div>
+    </div>
+    <div class="site-shell">
+        <nav class="site-nav">
+            <a class="site-brand" href="/">cdavenport.io</a>
+            <p class="site-tagline">notes from the homelab edge</p>
+        </nav>
+        <main class="site-main">
+            {{template "content" .}}
+        </main>
+        <footer class="site-footer">
+            <p>&copy; 2026 Connor Davenport</p>
+        </footer>
+    </div>
 </body>
 </html>{{end}}

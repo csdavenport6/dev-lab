@@ -213,13 +213,20 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - blog
+      blog:
+        condition: service_healthy
 
   blog:
     build: ./blog
     restart: unless-stopped
     expose:
       - "8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
 volumes:
   caddy_data:
@@ -234,18 +241,16 @@ volumes:
 
 1. Set `DIGITALOCEAN_TOKEN` environment variable.
 2. `terraform init` then `terraform apply` in the `terraform/` directory.
-3. Cloud-init runs: hardens server, installs Docker, clones the git repo, runs `docker compose up -d` from the repo root.
+3. Cloud-init runs: hardens server, installs Docker, clones the git repo, and starts the stack through the shared deployment script.
 4. Caddy provisions TLS certificate on first HTTPS request.
 5. Blog is live at `https://cdavenport.io`.
 
 ### Updating Blog Content
 
-For v1, manual process:
-
 1. Commit new markdown post to repo, push to remote.
-2. SSH to server: `git pull && docker compose up -d --build`.
-
-Future improvement: GitHub Actions CI/CD pipeline on push to main. Out of scope for v1.
+2. GitHub Actions runs the blog test suite and Docker build on push to `main`.
+3. If verification passes, the workflow SSHes to the droplet and runs `./scripts/deploy.sh`.
+4. The deploy completes only after Docker Compose reports the stack healthy.
 
 ### Full Rebuild
 
@@ -254,13 +259,12 @@ Future improvement: GitHub Actions CI/CD pipeline on push to main. Out of scope 
 ## Accepted Tradeoffs
 
 - **No config drift management.** Cloud-init runs once at creation. Manual SSH changes are not tracked or reverted. If drift becomes a problem, Ansible can be layered on later.
-- **Manual deploys for v1.** No CI/CD pipeline yet. SSH + git pull is fine for a personal blog.
+- **Single-environment deploys only.** The workflow targets production directly on `main`; there is no staging environment yet.
 - **No monitoring or alerting.** Out of scope for v1. Can add later (DO monitoring, or something self-hosted like Uptime Kuma).
 - **No backup strategy.** Blog content is in git. Droplet state is fully reproducible. No database to back up.
 
 ## Out of Scope
 
-- CI/CD pipeline
 - Monitoring / alerting
 - Database
 - Admin interface / CMS
