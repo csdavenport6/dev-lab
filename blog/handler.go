@@ -16,6 +16,7 @@ type Server struct {
 func newTemplatePair(layoutFile, contentFile string) (*template.Template, error) {
 	return template.New("").Funcs(template.FuncMap{
 		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
+		"add":      func(a, b int) int { return a + b },
 	}).ParseFiles(layoutFile, contentFile)
 }
 

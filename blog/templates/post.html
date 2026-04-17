@@ -1,8 +1,22 @@
 {{define "content"}}
 <article class="post-view">
-    <p class="eyebrow">Post</p>
-    <h1>{{.Post.Title}}</h1>
-    <time datetime="{{.Post.Date.Format "2006-01-02"}}">{{.Post.Date.Format "January 2, 2006"}}</time>
-    <div class="post-content">{{safeHTML .Post.Content}}</div>
+    <header class="post-view__header">
+        <p class="post-view__kicker">
+            <a href="/">&larr; Back to the trail</a>
+        </p>
+        <h1 class="post-view__title">{{.Post.Title}}</h1>
+        <div class="post-view__meta">
+            <time datetime="{{.Post.Date.Format "2006-01-02"}}">{{.Post.Date.Format "January 2, 2006"}}</time>
+            {{if .Post.Tags}}<span>Filed under {{index .Post.Tags 0}}</span>{{end}}
+            <span class="coord">30.27&deg; N</span>
+        </div>
+    </header>
+
+    <div class="post-view__body">{{safeHTML .Post.Content}}</div>
+
+    <footer class="post-view__footer">
+        <span class="post-view__end">&times;</span>
+        <a href="/">Return home</a>
+    </footer>
 </article>
 {{end}}
