@@ -70,25 +70,24 @@ body::before {
 
 .here {
     position: fixed;
-    top: 45vh;
-    left: 0;
+    top: 22vh;
+    left: 86vw;
+    width: 0;
+    height: 0;
     z-index: 40;
     pointer-events: none;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: row-reverse;
-    align-items: center;
-    gap: 0.65rem;
-    will-change: left;
 }
 .here__ring {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 24px;
     height: 24px;
+    transform: translate(-50%, -50%);
     border: 1.5px solid var(--vermilion);
     border-radius: 50%;
     background: rgba(241, 231, 207, 0.55);
-    flex-shrink: 0;
+    pointer-events: auto;
 }
 .here__ring::before {
     content: "";
@@ -108,6 +107,10 @@ body::before {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .here__label {
+    position: absolute;
+    top: 0;
+    right: calc(12px + 0.65rem);
+    transform: translateY(-50%);
     font-family: "JetBrains Mono", monospace;
     font-size: 0.62rem;
     letter-spacing: 0.18em;
@@ -119,10 +122,13 @@ body::before {
     border: 1px solid rgba(200, 58, 30, 0.35);
     line-height: 1.1;
     text-align: right;
+    min-width: 2.5rem;
+    min-height: 1rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
 }
-.here__label small {
-    color: var(--ink-muted);
-    font-size: 0.88em;
+.here__ring:hover + .here__label {
+    opacity: 1;
 }
 
 /* Ticker */
@@ -168,6 +174,15 @@ body::before {
     grid-template-columns: 1fr auto 1fr;
     align-items: end;
     gap: 2rem;
+    position: relative;
+}
+.masthead::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 100vw;
+    transform: translateX(-50%);
     border-bottom: 1px solid rgba(22, 42, 61, 0.32);
 }
 .masthead__left,
@@ -186,6 +201,26 @@ body::before {
     font-weight: 500;
 }
 .masthead__coord { color: var(--vermilion); }
+
+.masthead__socials {
+    display: inline-flex;
+    gap: 0.75rem;
+    align-items: center;
+    justify-content: flex-end;
+}
+.masthead__socials a {
+    display: inline-flex;
+    opacity: 0.65;
+    transition: opacity 0.2s ease;
+}
+.masthead__socials a:hover {
+    opacity: 1;
+}
+.masthead__socials img {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
 
 .masthead__logo {
     font-family: "Fraunces", serif;
@@ -247,12 +282,11 @@ body::before {
 /* Hero (index only) */
 .hero {
     padding: 2.25rem 3rem 2rem;
-    border-bottom: 1px solid rgba(22, 42, 61, 0.32);
     position: relative;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 3rem;
-    align-items: end;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 20rem);
 }
 .hero__main { min-width: 0; }
 .hero__kicker {
@@ -282,8 +316,9 @@ body::before {
     line-height: 0.9;
     letter-spacing: -0.035em;
     color: var(--ink);
-    max-width: 14ch;
+    max-width: 30ch;
     position: relative;
+    left: 5%;
     text-shadow:
         2px 2px 0 rgba(200, 58, 30, 0.65),
         -1px -1px 0 rgba(90, 107, 52, 0.3);

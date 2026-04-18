@@ -5,12 +5,12 @@
 
 <section class="hero">
     <div class="hero__main">
-        <h1 class="hero__title">Work in <em>progress</em>.</h1>
+        <h1 class="hero__title">Work in <em>progress</em>...</h1>
     </div>
 
 </section>
 
-<section class="posts">
+<!-- <section class="posts">
     <aside class="posts__gutter" aria-hidden="true">
         <div class="posts__gutter-inner">
             <p class="posts__gutter-label">
@@ -39,225 +39,12 @@
         </article>
 {{end}}
     </div>
-</section>
+</section> -->
 
 <div class="here" id="here" aria-hidden="true">
     <span class="here__ring"></span>
-    <span class="here__label">
-        <span id="hereCoord">30.27&deg; N</span><br>
-        <small id="hereSub">at rest</small>
-    </span>
+    <span class="here__label"></span>
 </div>
 
-<script>
-(function() {
-    const SVG_NS = "http://www.w3.org/2000/svg";
-    const trailSvg = document.getElementById("trailSvg");
-    const trailWrap = document.querySelector(".trail");
-    const here = document.getElementById("here");
-    const hereCoord = document.getElementById("hereCoord");
-    const hereSub = document.getElementById("hereSub");
-
-    let pts = [];
-    let pageHeight = 0;
-
-    function generateTrail(width, height) {
-        const segs = 140;
-        const result = [];
-        const cx = width * 0.84;
-        const minX = width * 0.64;
-        const maxX = width - 36;
-        for (let i = 0; i <= segs; i++) {
-            const t = i / segs;
-            const y = t * height;
-            const chaos = Math.pow(t, 1.7);
-            const amp = 22 + chaos * (width * 0.13);
-            let offset =
-                Math.sin(t * Math.PI * 3.4) * amp * 0.75 +
-                Math.sin(t * Math.PI * 8.2 + 1.3) * amp * 0.35 +
-                Math.sin(t * Math.PI * 17.1 + 2.4) * amp * (0.15 + chaos * 0.4);
-            if (chaos > 0.45) {
-                offset += Math.sin(t * Math.PI * 42 + 3.1) * (chaos - 0.45) * 85;
-            }
-            if (chaos > 0.78) {
-                offset += Math.sin(t * Math.PI * 6) * 110 * (chaos - 0.78) * 3;
-            }
-            let x = cx + offset;
-            x = Math.max(minX, Math.min(maxX, x));
-            result.push({ x, y });
-        }
-        return result;
-    }
-
-    function pathD(points) {
-        if (!points.length) return "";
-        let d = "M" + points[0].x.toFixed(2) + "," + points[0].y.toFixed(2);
-        for (let i = 1; i < points.length; i++) {
-            const p0 = points[i - 1];
-            const p1 = points[i];
-            const cy = (p0.y + p1.y) / 2;
-            d += " C" + p0.x.toFixed(2) + "," + cy.toFixed(2) + " " + p1.x.toFixed(2) + "," + cy.toFixed(2) + " " + p1.x.toFixed(2) + "," + p1.y.toFixed(2);
-        }
-        return d;
-    }
-
-    function xAtY(points, targetY) {
-        if (!points.length) return 0;
-        if (targetY <= points[0].y) return points[0].x;
-        for (let i = 0; i < points.length - 1; i++) {
-            if (points[i].y <= targetY && targetY <= points[i + 1].y) {
-                const span = points[i + 1].y - points[i].y;
-                const t = span > 0 ? (targetY - points[i].y) / span : 0;
-                return points[i].x + t * (points[i + 1].x - points[i].x);
-            }
-        }
-        return points[points.length - 1].x;
-    }
-
-    function buildTrail() {
-        const w = document.documentElement.clientWidth;
-        const h = document.documentElement.scrollHeight;
-        pageHeight = h;
-
-        trailWrap.style.height = h + "px";
-        trailSvg.setAttribute("viewBox", "0 0 " + w + " " + h);
-        trailSvg.setAttribute("width", w);
-        trailSvg.setAttribute("height", h);
-
-        pts = generateTrail(w, h);
-        trailSvg.replaceChildren();
-
-        const trace = document.createElementNS(SVG_NS, "path");
-        trace.setAttribute("d", pathD(pts));
-        trace.setAttribute("fill", "none");
-        trace.setAttribute("stroke", "#c83a1e");
-        trace.setAttribute("stroke-width", "6");
-        trace.setAttribute("stroke-linecap", "round");
-        trace.setAttribute("opacity", "0.08");
-        trailSvg.appendChild(trace);
-
-        const main = document.createElementNS(SVG_NS, "path");
-        main.setAttribute("d", pathD(pts));
-        main.setAttribute("fill", "none");
-        main.setAttribute("stroke", "#c83a1e");
-        main.setAttribute("stroke-width", "1.6");
-        main.setAttribute("stroke-dasharray", "2.5 7");
-        main.setAttribute("stroke-linecap", "round");
-        main.setAttribute("opacity", "0.78");
-        trailSvg.appendChild(main);
-
-        const strays = document.createElementNS(SVG_NS, "g");
-        strays.setAttribute("fill", "#c83a1e");
-        const strayMinX = w * 0.62;
-        const strayMaxX = w - 24;
-        const strayCount = 7;
-        for (let i = 0; i < strayCount; i++) {
-            const t = 0.25 + (i / strayCount) * 0.75;
-            const baseY = t * h;
-            const baseX = xAtY(pts, baseY);
-            const dir = i % 2 === 0 ? -0.45 : 1;
-            const drift = (30 + Math.pow(t, 2) * 160) * dir;
-            const sx = Math.max(strayMinX, Math.min(strayMaxX, baseX + drift));
-            const sy = baseY + (Math.random() - 0.5) * 40;
-            const c = document.createElementNS(SVG_NS, "circle");
-            c.setAttribute("cx", sx);
-            c.setAttribute("cy", sy);
-            c.setAttribute("r", 3);
-            c.setAttribute("opacity", 0.4 + t * 0.3);
-            strays.appendChild(c);
-
-            const connector = document.createElementNS(SVG_NS, "line");
-            connector.setAttribute("x1", baseX);
-            connector.setAttribute("y1", baseY);
-            connector.setAttribute("x2", sx);
-            connector.setAttribute("y2", sy);
-            connector.setAttribute("stroke", "#c83a1e");
-            connector.setAttribute("stroke-width", "0.7");
-            connector.setAttribute("stroke-dasharray", "2 4");
-            connector.setAttribute("opacity", 0.25);
-            strays.appendChild(connector);
-        }
-        trailSvg.appendChild(strays);
-
-        const startPt = pts[0];
-        const startGroup = document.createElementNS(SVG_NS, "g");
-        const startRing = document.createElementNS(SVG_NS, "circle");
-        startRing.setAttribute("cx", startPt.x);
-        startRing.setAttribute("cy", startPt.y + 8);
-        startRing.setAttribute("r", 9);
-        startRing.setAttribute("fill", "none");
-        startRing.setAttribute("stroke", "#2d3d2a");
-        startRing.setAttribute("stroke-width", 1);
-        startRing.setAttribute("stroke-dasharray", "2 3");
-        startGroup.appendChild(startRing);
-        const startDot = document.createElementNS(SVG_NS, "circle");
-        startDot.setAttribute("cx", startPt.x);
-        startDot.setAttribute("cy", startPt.y + 8);
-        startDot.setAttribute("r", 2.5);
-        startDot.setAttribute("fill", "#2d3d2a");
-        startGroup.appendChild(startDot);
-        trailSvg.appendChild(startGroup);
-
-        const endPt = pts[pts.length - 1];
-        const endGroup = document.createElementNS(SVG_NS, "g");
-        endGroup.setAttribute("transform", "translate(" + endPt.x + ", " + (endPt.y - 12) + ") rotate(-14)");
-        endGroup.setAttribute("stroke", "#c83a1e");
-        endGroup.setAttribute("stroke-width", 1.5);
-        endGroup.setAttribute("stroke-linecap", "round");
-        const arms = ["M-9,0 L9,0", "M0,-9 L0,9", "M-6,-6 L6,6", "M-6,6 L6,-6"];
-        for (const d of arms) {
-            const p = document.createElementNS(SVG_NS, "path");
-            p.setAttribute("d", d);
-            endGroup.appendChild(p);
-        }
-        trailSvg.appendChild(endGroup);
-    }
-
-    function updateHere() {
-        const sy = window.scrollY;
-        const vh = window.innerHeight;
-        const targetY = sy + vh * 0.45;
-        const x = xAtY(pts, targetY);
-        here.style.left = x + "px";
-
-        const progress = Math.max(0, Math.min(1, targetY / pageHeight));
-        const baseLat = 30.27;
-        const jitter = Math.pow(progress, 2) * 0.6;
-        const lat = baseLat + progress * 0.22 + Math.sin(progress * 40) * jitter;
-        hereCoord.textContent = lat.toFixed(2) + "\u00B0 N";
-
-        let sub;
-        if (progress < 0.15) sub = "at rest";
-        else if (progress < 0.35) sub = "in motion";
-        else if (progress < 0.55) sub = "off path";
-        else if (progress < 0.75) sub = "wayfinding";
-        else if (progress < 0.92) sub = "unmapped";
-        else sub = "here be dragons";
-        hereSub.textContent = sub;
-    }
-
-    buildTrail();
-    updateHere();
-
-    let rebuildTimer;
-    function scheduleRebuild() {
-        clearTimeout(rebuildTimer);
-        rebuildTimer = setTimeout(() => {
-            buildTrail();
-            updateHere();
-        }, 120);
-    }
-    window.addEventListener("resize", scheduleRebuild);
-    if (window.ResizeObserver) {
-        new ResizeObserver(scheduleRebuild).observe(document.body);
-    }
-
-    document.addEventListener("scroll", updateHere, { passive: true });
-
-    const io = new IntersectionObserver((entries) => {
-        entries.forEach((e) => e.isIntersecting && e.target.classList.add("in"));
-    }, { threshold: 0.15 });
-    document.querySelectorAll(".post").forEach((p) => io.observe(p));
-})();
-</script>
+<script src="/static/trail.js" defer></script>
 {{end}}

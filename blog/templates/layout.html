@@ -11,7 +11,7 @@
 </head>
 <body class="{{if .PageClass}}{{.PageClass}}{{else}}page-default{{end}}">
     <div class="tint" aria-hidden="true"></div>
-
+<!-- 
     <div class="ticker" aria-hidden="true">
         <div class="ticker__track">
             <span class="ticker__item"><span>&#9670;</span><span>37.77&deg; N / 122.41&deg; W</span></span>
@@ -31,7 +31,7 @@
             <span class="ticker__item"><span>&#9670;</span><span>SIGNAL NOMINAL</span></span>
             <span class="ticker__item"><span>EST</span><span>MMXXVI</span></span>
         </div>
-    </div>
+    </div> -->
 
     <div class="page">
         <header class="masthead">
@@ -40,26 +40,30 @@
                 <strong>San Francisco, CA</strong>
             </div>
             <a href="/" class="masthead__logo">Connor Davenport</a>
+
             <div class="masthead__right">
-                <strong>Est.</strong> MMXXVI<br>
-                Notes &amp; ramblings
+                <span class="masthead__socials">
+                    <a href="https://www.github.com/csdavenport6" aria-label="GitHub" target="_blank" rel="noopener noreferrer"><img src="/static/assets/github.svg" alt="" width="16" height="16"></a>
+                    <a href="https://www.linkedin.com/in/connordavenport" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer"><img src="/static/assets/linkedin-svgrepo-com.svg" alt="" width="16" height="16"></a>
+                    <a href="mailto:connor.davenport@hey.com" aria-label="Email"><img src="/static/assets/email-sign-svgrepo-com.svg" alt="" width="16" height="16"></a>
+                </span>
             </div>
         </header>
 
-        <div class="subbar">
+        <!-- <div class="subbar">
             <nav class="subbar__nav">
                 <a href="/">Writing</a>
                 <a href="/">Archive</a>
                 <a href="/">Elsewhere</a>
                 <a href="/">Colophon</a>
             </nav>
-        </div>
+        </div> -->
 
         <main class="site-main">
             {{template "content" .}}
         </main>
 
-        <footer class="footer">
+        <!-- <footer class="footer">
             <div>
                 Served from <strong>Digital Ocean</strong> <img src="/static/assets/do_logo.svg" alt="Digital Ocean" width="12" height="12cs"><br>
                 Set in <strong>Fraunces</strong> &amp; <strong>Newsreader</strong><br>
@@ -68,7 +72,7 @@
             <div class="footer__center">
                 &copy; 2026 Connor Davenport
             </div>
-        </footer>
+        </footer> -->
     </div>
 </body>
 </html>{{end}}
