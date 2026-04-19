@@ -15,6 +15,9 @@ provider "digitalocean" {
   token = var.do_token
 }
 
+# The hcloud provider validates token format at configure time regardless of
+# count, so a 64-char placeholder fills in when hcloud_token is unset. Real
+# Hetzner API calls only happen when provider_choice = "hetzner".
 provider "hcloud" {
   token = var.hcloud_token != "" ? var.hcloud_token : "placeholder-not-in-use-do-is-active-0000000000000000000000000000"
 }
