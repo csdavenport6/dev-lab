@@ -71,3 +71,11 @@ resource "digitalocean_record" "www" {
   value  = local.server_ip
   ttl    = 3600
 }
+
+resource "digitalocean_record" "deploy" {
+  domain = digitalocean_domain.main.id
+  type   = "A"
+  name   = "deploy"
+  value  = local.server_ip
+  ttl    = 3600
+}

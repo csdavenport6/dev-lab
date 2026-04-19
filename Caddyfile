@@ -5,3 +5,7 @@ cdavenport.io {
 www.cdavenport.io {
     redir https://cdavenport.io{uri} permanent
 }
+
+deploy.cdavenport.io {
+    reverse_proxy webhook:9000
+}
