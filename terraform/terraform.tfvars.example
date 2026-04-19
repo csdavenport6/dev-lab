@@ -1,4 +1,21 @@
-# do_token is read from TF_VAR_do_token environment variable
-# e.g.: set -x TF_VAR_do_token (op read "op://Personal/DigitalOcean API Token/credential")
+# Tokens are read from environment variables:
+#   set -x TF_VAR_do_token (op read "op://Personal/DigitalOcean API Token/credential")
+#   set -x TF_VAR_hcloud_token (op read "op://Personal/Hetzner Cloud API Token/credential")
+# do_token is always required (DNS lives on DigitalOcean).
+# hcloud_token is only required when provider_choice = "hetzner".
+
 ssh_key_name = "your-ssh-key-name"
 repo_url     = "https://github.com/connordavenport/dev-lab.git"
+
+# Compute provider selection. Default is "do".
+# provider_choice = "do"
+
+# DigitalOcean compute overrides (defaults: sfo3 / s-1vcpu-2gb / ubuntu-24-04-x64)
+# do_region = "sfo3"
+# do_size   = "s-1vcpu-2gb"
+# do_image  = "ubuntu-24-04-x64"
+
+# Hetzner compute overrides (defaults: hil / cx22 / ubuntu-24.04)
+# hetzner_location    = "hil"
+# hetzner_server_type = "cx22"
+# hetzner_image       = "ubuntu-24.04"

@@ -1,36 +1,18 @@
-variable "do_token" {
-  description = "DigitalOcean API token"
+variable "provider_choice" {
+  description = "Which compute provider to use: do or hetzner"
   type        = string
-  sensitive   = true
+  default     = "do"
+
+  validation {
+    condition     = contains(["do", "hetzner"], var.provider_choice)
+    error_message = "provider_choice must be 'do' or 'hetzner'."
+  }
 }
 
+# Shared
 variable "ssh_key_name" {
-  description = "Name of the SSH key in DigitalOcean"
+  description = "Name of the SSH key in the active provider (assumed identical name in both)"
   type        = string
-}
-
-variable "droplet_region" {
-  description = "DigitalOcean region slug"
-  type        = string
-  default     = "sfo3"
-}
-
-variable "droplet_size" {
-  description = "DigitalOcean droplet size slug"
-  type        = string
-  default     = "s-1vcpu-2gb"
-}
-
-variable "droplet_image" {
-  description = "DigitalOcean droplet image slug"
-  type        = string
-  default     = "ubuntu-24-04-x64"
-}
-
-variable "domain" {
-  description = "Domain name"
-  type        = string
-  default     = "cdavenport.io"
 }
 
 variable "username" {
@@ -48,4 +30,61 @@ variable "ssh_port" {
 variable "repo_url" {
   description = "Git repo URL to clone on the server"
   type        = string
+}
+
+variable "domain" {
+  description = "Domain name (always managed in DigitalOcean DNS)"
+  type        = string
+  default     = "cdavenport.io"
+}
+
+# DigitalOcean
+variable "do_token" {
+  description = "DigitalOcean API token (always required for DNS)"
+  type        = string
+  sensitive   = true
+}
+
+variable "do_region" {
+  description = "DigitalOcean region slug"
+  type        = string
+  default     = "sfo3"
+}
+
+variable "do_size" {
+  description = "DigitalOcean droplet size slug"
+  type        = string
+  default     = "s-1vcpu-2gb"
+}
+
+variable "do_image" {
+  description = "DigitalOcean droplet image slug"
+  type        = string
+  default     = "ubuntu-24-04-x64"
+}
+
+# Hetzner
+variable "hcloud_token" {
+  description = "Hetzner Cloud API token. Only required when provider_choice = hetzner. If left as the default empty string while hetzner is active, a 64-char placeholder is used at provider-configure time and Hetzner API calls will fail at plan with an authentication error rather than a Terraform validation error."
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "hetzner_location" {
+  description = "Hetzner Cloud location code"
+  type        = string
+  default     = "hil"
+}
+
+variable "hetzner_server_type" {
+  description = "Hetzner Cloud server type slug"
+  type        = string
+  default     = "cx22"
+}
+
+variable "hetzner_image" {
+  description = "Hetzner Cloud image name"
+  type        = string
+  default     = "ubuntu-24.04"
 }
