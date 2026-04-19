@@ -6,6 +6,9 @@ set -eu
 
 cd /workspace
 
+# Fail loudly if /workspace is not a git checkout (mount misconfigured).
+git -C /workspace rev-parse --is-inside-work-tree >/dev/null
+
 git fetch origin main
 git checkout main
 git reset --hard origin/main
