@@ -1,3 +1,14 @@
+variable "provider_choice" {
+  description = "Which compute provider to use: do or hetzner"
+  type        = string
+  default     = "do"
+
+  validation {
+    condition     = contains(["do", "hetzner"], var.provider_choice)
+    error_message = "provider_choice must be 'do' or 'hetzner'."
+  }
+}
+
 variable "do_token" {
   description = "DigitalOcean API token"
   type        = string
