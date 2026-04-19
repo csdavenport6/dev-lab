@@ -1,9 +1,9 @@
-output "droplet_ip" {
-  description = "Public IPv4 address of the droplet"
-  value       = digitalocean_droplet.web.ipv4_address
+output "server_ip" {
+  description = "Public IPv4 address of the server"
+  value       = module.do.ipv4_address
 }
 
 output "ssh_command" {
   description = "SSH command to connect"
-  value       = "ssh -p ${var.ssh_port} ${var.username}@${digitalocean_droplet.web.ipv4_address}"
+  value       = "ssh -p ${var.ssh_port} ${var.username}@${module.do.ipv4_address}"
 }
