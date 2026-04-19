@@ -53,6 +53,8 @@ Per-app hook configuration lives in `webhook/hooks.yml`. Each hook:
 
 The webhook container needs `/var/run/docker.sock` mounted to run `docker compose` against host state, and the dev-lab checkout mounted so it can `git pull` for infra updates. This is privileged; the mitigation is that hook commands are restricted to two vetted scripts (`redeploy-app.sh`, `redeploy-stack.sh`) that cannot be parameterised beyond a service name.
 
+Because `almir/webhook` is a minimal base image, a thin `webhook/Dockerfile` layers `docker-ce-cli`, `docker-compose-plugin`, and `git` on top so the scripts can actually invoke compose and pull. The compose service builds from that Dockerfile rather than using an upstream image directly.
+
 An app-repo CI step computes an HMAC of an empty body with its per-app token and POSTs to `https://deploy.cdavenport.io/hooks/<app-id>`. Blast radius of a leaked token: one redeploy of one app using whatever image is currently `:latest`. No shell access, no cross-app access, no infrastructure access.
 
 The webhook also owns an `infra` hook that runs `git pull --ff-only && docker compose up -d --wait` for infra-side changes (compose edits, Caddy edits, new-app onboarding).
@@ -87,10 +89,10 @@ services:
     restart: unless-stopped
     expose: ["9000"]
     volumes:
-      - ../webhook/hooks.yml:/etc/webhook/hooks.yml:ro
-      - ../webhook/scripts:/scripts:ro
+      - ./webhook/hooks.yml:/etc/webhook/hooks.yml:ro
+      - ./webhook/scripts:/scripts:ro
       - /var/run/docker.sock:/var/run/docker.sock
-      - ../:/workspace:rw
+      - ./:/workspace:rw
     env_file: /etc/dev-lab/webhook.env
     working_dir: /workspace
     command: ["-hooks=/etc/webhook/hooks.yml", "-verbose"]
@@ -184,7 +186,7 @@ cdavenport.io/
 `-- README.md
 ```
 
-**`dev-lab`**
+**`dev-lab`** (flat structure retained; compose and Caddy files stay at repo root to keep cloud-init and existing scripts working with minimal path churn)
 
 ```
 dev-lab/
@@ -199,12 +201,12 @@ dev-lab/
 |   `-- modules/
 |       |-- digitalocean/
 |       `-- hetzner/
-|-- compose/
-|   |-- docker-compose.yml
-|   |-- Caddyfile
-|   |-- Caddyfile.local
-|   `-- compose.override.yml.example
+|-- docker-compose.yml
+|-- Caddyfile
+|-- Caddyfile.local
+|-- compose.override.yml.example
 |-- webhook/
+|   |-- Dockerfile
 |   |-- hooks.yml
 |   `-- scripts/
 |       |-- redeploy-app.sh
@@ -214,6 +216,8 @@ dev-lab/
 |-- docs/
 `-- README.md
 ```
+
+A `compose/` subdirectory reorganisation is deferred. If/when application count grows past two, the grouping can be revisited as a cheap, well-scoped refactor.
 
 ## Accepted tradeoffs
 
