@@ -282,13 +282,12 @@ volumes:
 
 - [ ] **Step 3: Validate compose syntax locally**
 
-`docker compose config -q` reads `env_file:` paths eagerly, so the absolute path must exist during validation. Create a placeholder that mirrors the production location, validate, leave it (the same path is also needed for `docker compose up` locally).
+`docker compose config -q` reads `env_file:` paths eagerly, so the absolute path must exist during validation. Create a placeholder at the production location owned by the current user, matching the ownership story used on the droplet (the file must be readable by whoever runs `docker compose`).
 
 ```bash
 cd /Users/connor/Projects/dev-lab
-sudo install -m 0700 -d /etc/dev-lab
-sudo touch /etc/dev-lab/webhook.env
-sudo chmod 0600 /etc/dev-lab/webhook.env
+sudo install -m 0700 -o "$USER" -g "$(id -gn)" -d /etc/dev-lab
+sudo install -m 0600 -o "$USER" -g "$(id -gn)" /dev/null /etc/dev-lab/webhook.env
 docker compose config -q && echo OK
 ```
 
@@ -438,22 +437,24 @@ In 1Password, create a new item titled `dev-lab INFRA_HOOK_SECRET`, category "Pa
 
 - [ ] **Step 3: Write the env file on the droplet**
 
+The compose CLI runs as the `connor` user, so `env_file:` paths must be readable by `connor`. Create the directory owned by `connor` (not `root`) and store the secret inside:
+
 Substitute `<hex>` with the value from step 1:
 
 ```bash
 ssh -p 2222 connor@cdavenport.io \
-  "sudo install -m 0700 -d /etc/dev-lab && \
-   echo 'INFRA_HOOK_SECRET=<hex>' | sudo tee /etc/dev-lab/webhook.env > /dev/null && \
-   sudo chmod 0600 /etc/dev-lab/webhook.env && \
-   sudo ls -l /etc/dev-lab/webhook.env"
+  "sudo install -m 0700 -o connor -g connor -d /etc/dev-lab && \
+   echo 'INFRA_HOOK_SECRET=<hex>' > /etc/dev-lab/webhook.env && \
+   chmod 0600 /etc/dev-lab/webhook.env && \
+   ls -ld /etc/dev-lab && ls -l /etc/dev-lab/webhook.env"
 ```
 
-Expected: file listed with `-rw-------` perms and root owner.
+Expected: `drwx------ connor connor /etc/dev-lab` and `-rw------- connor connor /etc/dev-lab/webhook.env`.
 
 - [ ] **Step 4: Verify the value**
 
 ```bash
-ssh -p 2222 connor@cdavenport.io "sudo cat /etc/dev-lab/webhook.env"
+ssh -p 2222 connor@cdavenport.io "cat /etc/dev-lab/webhook.env"
 ```
 
 Expected: one line `INFRA_HOOK_SECRET=<hex>` matching what you set.
@@ -1015,8 +1016,13 @@ Store in 1Password as `dev-lab BLOG_HOOK_SECRET`.
 
 - [ ] **Step 2: Update droplet env file**
 
+`/etc/dev-lab/webhook.env` is owned by `connor` (see Task 1.7), so no sudo is needed to append:
+
 ```bash
-ssh -p 2222 connor@cdavenport.io "sudo sh -c 'echo \"BLOG_HOOK_SECRET=<hex>\" >> /etc/dev-lab/webhook.env && chmod 0600 /etc/dev-lab/webhook.env && cat /etc/dev-lab/webhook.env'"
+ssh -p 2222 connor@cdavenport.io \
+  "echo 'BLOG_HOOK_SECRET=<hex>' >> /etc/dev-lab/webhook.env && \
+   chmod 0600 /etc/dev-lab/webhook.env && \
+   cat /etc/dev-lab/webhook.env"
 ```
 
 Expected: file now has two lines, `INFRA_HOOK_SECRET=...` and `BLOG_HOOK_SECRET=...`.
@@ -1643,15 +1649,15 @@ Go tooling was never explicitly installed in cloud-init; the blog was built insi
 
 - [ ] **Step 1: Add env-dir creation to cloud-init**
 
-Edit `terraform/cloud-init.yml.tpl`. In the `runcmd:` list, above the `git clone` line, add:
+Edit `terraform/cloud-init.yml.tpl`. In the `runcmd:` list, above the `git clone` line, add (substitute `${username}` as already used elsewhere in the template):
 
 ```yaml
-  # Ensure webhook env directory exists. The secrets file itself must be
-  # populated out-of-band by the operator on first boot before the webhook
-  # service can pass authenticated hooks through.
-  - install -m 0700 -d /etc/dev-lab
-  - touch /etc/dev-lab/webhook.env
-  - chmod 0600 /etc/dev-lab/webhook.env
+  # Ensure webhook env directory exists, owned by the service user so `docker
+  # compose` (invoked as ${username}) can read env_file paths. The secrets file
+  # itself must be populated out-of-band by the operator on first boot before
+  # the webhook service can pass authenticated hooks through.
+  - install -m 0700 -o ${username} -g ${username} -d /etc/dev-lab
+  - install -m 0600 -o ${username} -g ${username} /dev/null /etc/dev-lab/webhook.env
 ```
 
 - [ ] **Step 2: Validate**
