@@ -65,7 +65,7 @@ variable "do_image" {
 
 # Hetzner
 variable "hcloud_token" {
-  description = "Hetzner Cloud API token (only required when provider_choice = hetzner)"
+  description = "Hetzner Cloud API token. Only required when provider_choice = hetzner. If left as the default empty string while hetzner is active, a 64-char placeholder is used at provider-configure time and Hetzner API calls will fail at plan with an authentication error rather than a Terraform validation error."
   type        = string
   sensitive   = true
   default     = ""
