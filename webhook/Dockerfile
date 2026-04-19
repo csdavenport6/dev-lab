@@ -1,4 +1,4 @@
-FROM docker:24-cli-alpine3.22
+FROM alpine:3.22
 
 ARG WEBHOOK_VERSION=2.8.3
 
