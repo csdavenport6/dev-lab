@@ -1770,6 +1770,12 @@ Update the user's memory noting the split is complete. (Handled by the agent dri
 
 ---
 
+## Follow-ups (not blocking the split)
+
+- [ ] **Convert Caddyfile bind mount from file to directory.** The compose file mounts `./Caddyfile:/etc/caddy/Caddyfile` as a single file. Docker binds to the host inode at container start, so `git pull` replacing the Caddyfile (new inode) does not propagate into the running container; a `docker compose up -d` that does not recreate the caddy service will silently serve stale config. Observed 2026-04-19 after the Phase 1 merge: deploy.cdavenport.io had no cert because Caddy never saw the new site block until a `--force-recreate caddy`. Fix: mount a directory (e.g. `./caddy/:/etc/caddy/`) and reference `/etc/caddy/Caddyfile` from inside; directory-mount inode changes behave correctly under git updates. Do this as its own small PR after the split is complete.
+
+---
+
 ## Done criteria
 
 - `dev-lab` contains no application source code.
