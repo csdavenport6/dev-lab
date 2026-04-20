@@ -2,6 +2,7 @@
   execute-command: /scripts/redeploy-stack.sh
   command-working-directory: /workspace
   response-message: "infra redeploy triggered"
+  trigger-rule-mismatch-http-response-code: 403
   trigger-rule:
     match:
       type: payload-hmac-sha256

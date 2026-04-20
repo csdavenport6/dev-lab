@@ -5,7 +5,7 @@
 # hcloud_token is only required when provider_choice = "hetzner".
 
 ssh_key_name = "your-ssh-key-name"
-repo_url     = "https://github.com/connordavenport/dev-lab.git"
+repo_url     = "https://github.com/csdavenport6/dev-lab.git"
 
 # Compute provider selection. Default is "do".
 # provider_choice = "do"
