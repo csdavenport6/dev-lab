@@ -16,7 +16,8 @@ services:
         condition: service_started
 
   blog:
-    build: ./blog
+    image: ghcr.io/csdavenport6/cdavenport.io:latest
+    pull_policy: always
     restart: unless-stopped
     expose:
       - "8080"
