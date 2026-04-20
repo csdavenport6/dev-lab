@@ -191,6 +191,7 @@ Create `webhook/hooks.yml`:
   execute-command: /scripts/redeploy-stack.sh
   command-working-directory: /workspace
   response-message: "infra redeploy triggered"
+  trigger-rule-mismatch-http-response-code: 403
   trigger-rule:
     match:
       type: payload-hmac-sha256
@@ -204,6 +205,7 @@ Notes:
 - The HMAC secret is read from `INFRA_HOOK_SECRET` in the container environment at startup. The secret itself lives in `/etc/dev-lab/webhook.env` on the droplet (see Task 1.7).
 - Template expansion requires the `-template` flag on the `webhook` command (added to the compose service command in Task 1.4). adnanh/webhook 2.8+ supports `{{getenv}}`.
 - The single-quoted YAML value avoids needing to escape the inner double quotes around the variable name.
+- `trigger-rule-mismatch-http-response-code: 403` makes failed signature checks return HTTP 403 instead of the library default (HTTP 200 with a text body). This is correct HTTP semantics and lets monitoring distinguish auth failures from successful deploys.
 
 - [ ] **Step 2: Commit**
 
@@ -273,7 +275,7 @@ services:
       - ./:/workspace:rw
     env_file: /etc/dev-lab/webhook.env
     working_dir: /workspace
-    command: ["-hooks=/etc/webhook/hooks.yml", "-verbose", "-port=9000", "-template"]
+    command: ["-hooks=/etc/webhook/hooks.yml", "-verbose", "-port=9000", "-template", "-hotreload"]
 
 volumes:
   caddy_data:
@@ -523,7 +525,7 @@ Expected: a 404 or webhook-default page over HTTPS. The key signal is that TLS c
 curl -i -X POST https://deploy.cdavenport.io/hooks/infra -d ''
 ```
 
-Expected: HTTP 4xx (webhook rejects due to missing/bad signature). No 5xx, no 200.
+Expected: HTTP 403 (webhook rejects due to missing/bad signature) with body `Hook rules were not satisfied.`. No 5xx, no 200. The 403 comes from `trigger-rule-mismatch-http-response-code: 403` in hooks.yml; without that field, adnanh/webhook's default is HTTP 200 with the same body.
 
 ---
 
@@ -587,7 +589,7 @@ Expected: `ok`.
 
 ```bash
 cd /Users/connor/Projects
-git clone https://github.com/connordavenport/dev-lab.git dev-lab-extract
+git clone https://github.com/csdavenport6/dev-lab.git dev-lab-extract
 ```
 
 Using a fresh clone, not the working checkout, so extraction cannot damage live work.
@@ -630,7 +632,7 @@ cd /Users/connor/Projects/cdavenport.io
 go test ./...
 ```
 
-Expected: all tests pass. If import paths break, note them; they may reference `github.com/connordavenport/dev-lab/blog` and need updating in a later step.
+Expected: all tests pass. If import paths break, note them; they may reference `github.com/csdavenport6/dev-lab/blog` and need updating in a later step.
 
 ---
 
@@ -647,25 +649,25 @@ Expected: all tests pass. If import paths break, note them; they may reference `
 Replace the first line of `go.mod`:
 
 ```
-module github.com/connordavenport/dev-lab/blog
+module github.com/csdavenport6/dev-lab/blog
 ```
 
 with:
 
 ```
-module github.com/connordavenport/cdavenport.io
+module github.com/csdavenport6/cdavenport.io
 ```
 
 - [ ] **Step 2: Find any references to the old import path**
 
 ```bash
 cd /Users/connor/Projects/cdavenport.io
-grep -r "connordavenport/dev-lab/blog" --include='*.go' . || echo "no references"
+grep -r "csdavenport6/dev-lab/blog" --include='*.go' . || echo "no references"
 ```
 
 - [ ] **Step 3: Replace them if any exist**
 
-For each file with a match, edit the import to `github.com/connordavenport/cdavenport.io/...`. If the output of step 2 was "no references", skip.
+For each file with a match, edit the import to `github.com/csdavenport6/cdavenport.io/...`. If the output of step 2 was "no references", skip.
 
 - [ ] **Step 4: Re-run tests**
 
@@ -679,7 +681,7 @@ Expected: all tests pass.
 
 ```bash
 git add -A
-git commit -m "Rename module to github.com/connordavenport/cdavenport.io"
+git commit -m "Rename module to github.com/csdavenport6/cdavenport.io"
 ```
 
 ---
@@ -716,7 +718,7 @@ docker run --rm -p 8080:8080 cdavenport.io
 
 ## Deploy
 
-Push to `main`. CI builds, tags, and pushes an image to `ghcr.io/connordavenport/cdavenport.io`, then signs a POST to `https://deploy.cdavenport.io/hooks/blog` to trigger a production redeploy. Secrets required in GitHub Actions:
+Push to `main`. CI builds, tags, and pushes an image to `ghcr.io/csdavenport6/cdavenport.io`, then signs a POST to `https://deploy.cdavenport.io/hooks/blog` to trigger a production redeploy. Secrets required in GitHub Actions:
 
 - `DEPLOY_HOOK_URL` - e.g. `https://deploy.cdavenport.io/hooks/blog`
 - `DEPLOY_HOOK_SECRET` - HMAC secret shared with the server's `webhook.env`.
@@ -777,7 +779,7 @@ git commit -m "Add README and standalone compose.dev.yml"
 
 ```bash
 cd /Users/connor/Projects/cdavenport.io
-gh repo create connordavenport/cdavenport.io --public \
+gh repo create csdavenport6/cdavenport.io --public \
   --description "The Go blog that serves cdavenport.io" \
   --source . --remote origin
 ```
@@ -889,12 +891,12 @@ Expected: `test` and `build-and-push` jobs both succeed on `main`.
 
 - [ ] **Step 4: Confirm the image lives in GHCR**
 
-In the browser, open `https://github.com/connordavenport/cdavenport.io/pkgs/container/cdavenport.io` and confirm `latest` and `sha-<7>` tags exist.
+In the browser, open `https://github.com/csdavenport6/cdavenport.io/pkgs/container/cdavenport.io` and confirm `latest` and `sha-<7>` tags exist.
 
 Alternatively:
 
 ```bash
-gh api /users/connordavenport/packages/container/cdavenport.io/versions --jq '.[].metadata.container.tags'
+gh api /users/csdavenport6/packages/container/cdavenport.io/versions --jq '.[].metadata.container.tags'
 ```
 
 Expected: JSON arrays containing `latest` and the short SHA.
@@ -906,8 +908,8 @@ In the GHCR UI (Packages -> cdavenport.io -> Package settings -> Change visibili
 - [ ] **Step 6: Smoke-pull the image anonymously**
 
 ```bash
-docker pull ghcr.io/connordavenport/cdavenport.io:latest
-docker run --rm -p 8080:8080 ghcr.io/connordavenport/cdavenport.io:latest &
+docker pull ghcr.io/csdavenport6/cdavenport.io:latest
+docker run --rm -p 8080:8080 ghcr.io/csdavenport6/cdavenport.io:latest &
 sleep 3
 curl -sSf http://127.0.0.1:8080/healthz
 kill %1 2>/dev/null || true
@@ -951,7 +953,7 @@ with:
 
 ```yaml
   blog:
-    image: ghcr.io/connordavenport/cdavenport.io:latest
+    image: ghcr.io/csdavenport6/cdavenport.io:latest
     pull_policy: always
     restart: unless-stopped
     expose:
@@ -972,7 +974,7 @@ Expected: "OK". (The local `/etc/dev-lab/webhook.env` placeholder from Task 1.4 
 git add docker-compose.yml
 git commit -m "Switch blog service to GHCR image"
 git push -u origin switch-blog-to-ghcr
-gh pr create --title "Switch blog to GHCR image" --body "Blog now pulled from ghcr.io/connordavenport/cdavenport.io:latest instead of built from local ./blog. The ./blog directory is not yet deleted; that happens after the new deploy path is wired up."
+gh pr create --title "Switch blog to GHCR image" --body "Blog now pulled from ghcr.io/csdavenport6/cdavenport.io:latest instead of built from local ./blog. The ./blog directory is not yet deleted; that happens after the new deploy path is wired up."
 gh pr checks --watch
 gh pr merge --squash --delete-branch
 ```
@@ -982,7 +984,7 @@ The existing SSH-based deploy workflow runs on merge, bringing the change live.
 - [ ] **Step 5: Verify the site serves from the GHCR image**
 
 ```bash
-ssh -p 2222 connor@cdavenport.io "docker image ls ghcr.io/connordavenport/cdavenport.io"
+ssh -p 2222 connor@cdavenport.io "docker image ls ghcr.io/csdavenport6/cdavenport.io"
 ```
 
 Expected: the `latest` tag listed with a recent `CREATED` timestamp.
@@ -1044,6 +1046,7 @@ Create a branch and edit `webhook/hooks.yml` so it reads:
   execute-command: /scripts/redeploy-stack.sh
   command-working-directory: /workspace
   response-message: "infra redeploy triggered"
+  trigger-rule-mismatch-http-response-code: 403
   trigger-rule:
     match:
       type: payload-hmac-sha256
@@ -1059,6 +1062,7 @@ Create a branch and edit `webhook/hooks.yml` so it reads:
     - source: string
       name: blog
   response-message: "blog redeploy triggered"
+  trigger-rule-mismatch-http-response-code: 403
   trigger-rule:
     match:
       type: payload-hmac-sha256
@@ -1119,7 +1123,7 @@ Expected: `ok`.
 
 - [ ] **Step 1: Add repo secrets**
 
-In the GitHub UI for `connordavenport/cdavenport.io`, add two repository secrets:
+In the GitHub UI for `csdavenport6/cdavenport.io`, add two repository secrets:
 
 - `DEPLOY_HOOK_URL` = `https://deploy.cdavenport.io/hooks/blog`
 - `DEPLOY_HOOK_SECRET` = the blog HMAC hex from 1Password
@@ -1127,8 +1131,8 @@ In the GitHub UI for `connordavenport/cdavenport.io`, add two repository secrets
 Or via CLI:
 
 ```bash
-gh secret set DEPLOY_HOOK_URL --repo connordavenport/cdavenport.io --body 'https://deploy.cdavenport.io/hooks/blog'
-gh secret set DEPLOY_HOOK_SECRET --repo connordavenport/cdavenport.io
+gh secret set DEPLOY_HOOK_URL --repo csdavenport6/cdavenport.io --body 'https://deploy.cdavenport.io/hooks/blog'
+gh secret set DEPLOY_HOOK_SECRET --repo csdavenport6/cdavenport.io
 # paste the hex when prompted
 ```
 
@@ -1186,7 +1190,7 @@ Expected: new commit SHA shows up on the running container.
 - [ ] **Step 6: Confirm the running image matches the new SHA**
 
 ```bash
-ssh -p 2222 connor@cdavenport.io "docker inspect ghcr.io/connordavenport/cdavenport.io:latest --format '{{ index .RepoDigests 0 }}'"
+ssh -p 2222 connor@cdavenport.io "docker inspect ghcr.io/csdavenport6/cdavenport.io:latest --format '{{ index .RepoDigests 0 }}'"
 ```
 
 And confirm the site still returns healthy and the change is live:
@@ -1307,7 +1311,7 @@ git commit -m "Remove blog source; blog now ships from GHCR"
 
 ```bash
 git push -u origin remove-blog-source
-gh pr create --title "Remove blog source from dev-lab" --body "Blog is now published from connordavenport/cdavenport.io to GHCR. dev-lab is infra-only."
+gh pr create --title "Remove blog source from dev-lab" --body "Blog is now published from csdavenport6/cdavenport.io to GHCR. dev-lab is infra-only."
 gh pr checks --watch
 gh pr merge --squash --delete-branch
 ```
@@ -1336,8 +1340,8 @@ Expected: `ok`.
 - [ ] **Step 1: Add repo secrets to dev-lab**
 
 ```bash
-gh secret set DEPLOY_HOOK_URL --repo connordavenport/dev-lab --body 'https://deploy.cdavenport.io/hooks/infra'
-gh secret set DEPLOY_HOOK_SECRET --repo connordavenport/dev-lab
+gh secret set DEPLOY_HOOK_URL --repo csdavenport6/dev-lab --body 'https://deploy.cdavenport.io/hooks/infra'
+gh secret set DEPLOY_HOOK_SECRET --repo csdavenport6/dev-lab
 # paste the INFRA_HOOK_SECRET hex when prompted
 ```
 
@@ -1457,16 +1461,16 @@ Expected: `ok` from blog, webhook endpoint still responding.
 - [ ] **Step 1: Delete dev-lab repo SSH secrets**
 
 ```bash
-gh secret delete DEPLOY_SSH_KEY --repo connordavenport/dev-lab
-gh secret delete DEPLOY_HOST --repo connordavenport/dev-lab
-gh secret delete DEPLOY_PORT --repo connordavenport/dev-lab
-gh secret delete DEPLOY_USER --repo connordavenport/dev-lab
+gh secret delete DEPLOY_SSH_KEY --repo csdavenport6/dev-lab
+gh secret delete DEPLOY_HOST --repo csdavenport6/dev-lab
+gh secret delete DEPLOY_PORT --repo csdavenport6/dev-lab
+gh secret delete DEPLOY_USER --repo csdavenport6/dev-lab
 ```
 
 - [ ] **Step 2: Confirm the deleted list**
 
 ```bash
-gh secret list --repo connordavenport/dev-lab
+gh secret list --repo csdavenport6/dev-lab
 ```
 
 Expected: only `DEPLOY_HOOK_URL` and `DEPLOY_HOOK_SECRET` remain (plus any other unrelated secrets).
@@ -1511,8 +1515,8 @@ Two repos, two deploy paths, one webhook receiver.
 
 ## Overview
 
-- **Blog source:** `github.com/connordavenport/cdavenport.io`. CI builds an image on push to `main`, pushes to `ghcr.io/connordavenport/cdavenport.io:{latest,sha-<7>}`, then signs a POST to the blog hook.
-- **Infra source:** `github.com/connordavenport/dev-lab` (this repo). CI runs `terraform validate` on push to `main`, then signs a POST to the infra hook.
+- **Blog source:** `github.com/csdavenport6/cdavenport.io`. CI builds an image on push to `main`, pushes to `ghcr.io/csdavenport6/cdavenport.io:{latest,sha-<7>}`, then signs a POST to the blog hook.
+- **Infra source:** `github.com/csdavenport6/dev-lab` (this repo). CI runs `terraform validate` on push to `main`, then signs a POST to the infra hook.
 - **Receiver:** `adnanh/webhook` running on the droplet behind Caddy at `https://deploy.cdavenport.io`.
 
 ## Hooks
@@ -1538,7 +1542,7 @@ Each hook secret has three storage locations. To rotate:
 
 ## Rollback
 
-- **Blog:** retag an earlier `ghcr.io/connordavenport/cdavenport.io:sha-<7>` as `latest` via the GHCR UI or API, then trigger `POST /hooks/blog` (or simply `workflow_dispatch` the CI on a known-good commit).
+- **Blog:** retag an earlier `ghcr.io/csdavenport6/cdavenport.io:sha-<7>` as `latest` via the GHCR UI or API, then trigger `POST /hooks/blog` (or simply `workflow_dispatch` the CI on a known-good commit).
 - **Infra:** revert the offending commit on `dev-lab` main; CI redeploys via the infra hook.
 
 ## Operator recovery
@@ -1605,7 +1609,7 @@ Applications run from pre-built images pulled from public registries; their sour
 
 | Name | Image | Source repo |
 |---|---|---|
-| blog | `ghcr.io/connordavenport/cdavenport.io:latest` | `connordavenport/cdavenport.io` |
+| blog | `ghcr.io/csdavenport6/cdavenport.io:latest` | `csdavenport6/cdavenport.io` |
 
 ## Onboarding a new application
 
@@ -1758,8 +1762,8 @@ In `dev-lab`, add a comment to `Caddyfile`, commit, push via PR. Verify the infr
 - [ ] **Step 4: Confirm no SSH key is used**
 
 ```bash
-gh secret list --repo connordavenport/cdavenport.io
-gh secret list --repo connordavenport/dev-lab
+gh secret list --repo csdavenport6/cdavenport.io
+gh secret list --repo csdavenport6/dev-lab
 ```
 
 Expected: neither repo has any `DEPLOY_SSH_*` secrets. Only `DEPLOY_HOOK_URL` and `DEPLOY_HOOK_SECRET`.
@@ -1780,7 +1784,7 @@ Update the user's memory noting the split is complete. (Handled by the agent dri
 
 - `dev-lab` contains no application source code.
 - `cdavenport.io` is an independent repo on GitHub with preserved blog history.
-- Production blog is served by `ghcr.io/connordavenport/cdavenport.io:latest`.
+- Production blog is served by `ghcr.io/csdavenport6/cdavenport.io:latest`.
 - Both repos auto-deploy via signed POST to `https://deploy.cdavenport.io`.
 - Neither repo holds SSH access to the droplet.
 - `docs/deployment-workflow.md` reflects reality; post-rebuild runbook is in place.

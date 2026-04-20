@@ -34,7 +34,7 @@ The user wants:
 
 ### Application image pipeline
 
-The blog repo's CI publishes images to `ghcr.io/connordavenport/cdavenport.io`:
+The blog repo's CI publishes images to `ghcr.io/csdavenport6/cdavenport.io`:
 
 - `:latest` - floating tag consumed by the running compose stack.
 - `:sha-<7>` - immutable per-commit tag for pinned rollback.
@@ -74,7 +74,7 @@ services:
     depends_on: [blog, webhook]
 
   blog:
-    image: ghcr.io/connordavenport/cdavenport.io:latest
+    image: ghcr.io/csdavenport6/cdavenport.io:latest
     restart: unless-stopped
     expose: ["8080"]
     healthcheck:
@@ -150,10 +150,10 @@ For full-stack local testing (Caddy + blog together), two options:
 
 Each step is individually reversible and leaves the site live.
 
-1. **Extract blog history.** `git filter-repo --subdirectory-filter blog` in a fresh clone of `dev-lab`. Push to new `connordavenport/cdavenport.io` repo.
-2. **Bootstrap blog CI.** Add CI on a non-main branch; verify an image lands in GHCR as `ghcr.io/connordavenport/cdavenport.io:sha-<7>`.
+1. **Extract blog history.** `git filter-repo --subdirectory-filter blog` in a fresh clone of `dev-lab`. Push to new `csdavenport6/cdavenport.io` repo.
+2. **Bootstrap blog CI.** Add CI on a non-main branch; verify an image lands in GHCR as `ghcr.io/csdavenport6/cdavenport.io:sha-<7>`.
 3. **Add webhook service to dev-lab.** Edit compose, Caddyfile, add `webhook/` directory with `hooks.yml` and scripts. Add `deploy.cdavenport.io` A record to Terraform. Deploy via the existing SSH flow. Verify the endpoint responds and auth rejects unsigned requests.
-4. **Switch blog service to GHCR image.** Change `docker-compose.yml` to pull `ghcr.io/connordavenport/cdavenport.io:latest` instead of building `./blog/`. Deploy via SSH. Verify the site serves from the GHCR image.
+4. **Switch blog service to GHCR image.** Change `docker-compose.yml` to pull `ghcr.io/csdavenport6/cdavenport.io:latest` instead of building `./blog/`. Deploy via SSH. Verify the site serves from the GHCR image.
 5. **Enable blog auto-deploy via hook.** Flip blog repo CI to main-branch and add the signed-POST step. Push a trivial change; verify end-to-end.
 6. **Delete `blog/` from dev-lab.** Along with the associated CI job fragments (Go test + docker build of `./blog`). Main branch now has no Go source.
 7. **Enable infra hook.** Move `dev-lab` CI from SSH to signed POST to `/hooks/infra`. Verify by pushing an infra change.

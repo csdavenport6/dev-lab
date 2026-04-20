@@ -39,7 +39,7 @@ services:
       - ./:/workspace:rw
     env_file: /etc/dev-lab/webhook.env
     working_dir: /workspace
-    command: ["-hooks=/etc/webhook/hooks.yml", "-verbose", "-port=9000", "-template"]
+    command: ["-hooks=/etc/webhook/hooks.yml", "-verbose", "-port=9000", "-template", "-hotreload"]
 
 volumes:
   caddy_data:
