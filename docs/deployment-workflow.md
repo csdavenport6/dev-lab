@@ -30,6 +30,10 @@ Set these repository secrets before enabling automated deploys:
 - `DEPLOY_USER`: server user, such as `connor`
 - `DEPLOY_SSH_KEY`: private key for the deploy user
 
+## Webhook Deploy (in-progress successor)
+
+A webhook receiver is being rolled out to replace the SSH deploy flow. Per-app signed POSTs to `https://deploy.cdavenport.io/hooks/<name>` trigger redeploys without any SSH key in CI. See the [webhook runbook](webhook-runbook.md) for architecture, manual invocation, secret rotation, and troubleshooting. Once the split plan's Phase 6 lands, this document will be rewritten around the webhook flow and the SSH section above becomes the recovery path described in the runbook.
+
 ## Manual Fallback
 
 If GitHub Actions is unavailable, the same deployment path works over SSH:
