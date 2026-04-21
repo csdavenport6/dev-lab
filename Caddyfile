@@ -1,3 +1,4 @@
+# Primary blog host.
 cdavenport.io {
     reverse_proxy blog:8080
 }
