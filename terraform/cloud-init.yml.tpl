@@ -96,6 +96,13 @@ runcmd:
   - apt-get update
   - apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
+  # Create the webhook env dir owned by the service user so docker compose
+  # (invoked as ${username}) can read env_file paths. The secrets file
+  # itself must be populated out-of-band by the operator on first boot
+  # before the webhook service can pass authenticated hooks through.
+  - install -m 0700 -o ${username} -g ${username} -d /etc/dev-lab
+  - install -m 0600 -o ${username} -g ${username} /dev/null /etc/dev-lab/webhook.env
+
   # Clone repo and start services
   - git clone ${repo_url} /home/${username}/dev-lab
   - chown -R ${username}:${username} /home/${username}/dev-lab
