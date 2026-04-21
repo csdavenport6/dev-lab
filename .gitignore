@@ -4,8 +4,5 @@ terraform/*.tfstate
 terraform/*.tfstate.*
 terraform/*.tfvars
 
-# Go
-blog/blog
-
 # OS
 .DS_Store
