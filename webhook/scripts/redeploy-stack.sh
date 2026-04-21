@@ -32,6 +32,7 @@ docker run --detach --rm \
     --entrypoint sh \
     dev-lab-webhook \
     -c '
+        set -eu
         sleep 3
         git fetch origin main
         git checkout main
