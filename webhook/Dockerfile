@@ -7,6 +7,7 @@ RUN apk add --no-cache git ca-certificates curl docker-cli-compose \
         | tar -xz -C /tmp \
     && mv /tmp/webhook-linux-amd64/webhook /usr/local/bin/webhook \
     && chmod +x /usr/local/bin/webhook \
-    && rm -rf /tmp/webhook-linux-amd64
+    && rm -rf /tmp/webhook-linux-amd64 \
+    && git config --system --add safe.directory /workspace
 
 ENTRYPOINT ["webhook"]
