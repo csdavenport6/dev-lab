@@ -38,6 +38,7 @@ services:
       - ./webhook/scripts:/scripts:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - ./:/workspace:rw
+      - /etc/dev-lab:/etc/dev-lab:ro
     env_file: /etc/dev-lab/webhook.env
     working_dir: /workspace
     command: ["-hooks=/etc/webhook/hooks.yml", "-verbose", "-port=9000", "-template", "-hotreload"]
