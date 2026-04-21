@@ -18,7 +18,7 @@ GitHub Actions (or operator curl)
 Caddy (cdavenport.io termination, Let's Encrypt cert)
   |  reverse_proxy webhook:9000
   v
-webhook container (dev-lab-webhook-1)
+webhook container (infra-webhook-1)
   |  1. HMAC verify body against {{getenv "<NAME>_HOOK_SECRET"}}
   |  2. If mismatch, HTTP 403 "Hook rules were not satisfied."
   |  3. If match, exec redeploy-<stack|app>.sh
@@ -30,8 +30,8 @@ docker compose pull + up -d --wait
 
 | Path | Role |
 |------|------|
-| `~/dev-lab` | the repo checkout; bind-mounted into the webhook container at `/workspace` so the script can `git pull` and `docker compose` against it |
-| `/etc/dev-lab/webhook.env` | secret file, mode `0600`, owner `connor:connor`, loaded by the webhook service via `env_file:` |
+| `~/infra` | the repo checkout; bind-mounted into the webhook container at `/workspace` so the script can `git pull` and `docker compose` against it |
+| `/etc/infra/webhook.env` | secret file, mode `0600`, owner `connor:connor`, loaded by the webhook service via `env_file:` |
 | `/var/run/docker.sock` | host docker socket bind-mounted into the webhook container so it can drive compose |
 
 The webhook container is defined in [docker-compose.yml](../docker-compose.yml). Hooks are defined in [webhook/hooks.yml](../webhook/hooks.yml). Redeploy scripts live in [webhook/scripts/](../webhook/scripts/).
@@ -40,7 +40,7 @@ The webhook container is defined in [docker-compose.yml](../docker-compose.yml).
 
 | Hook | Script | Secret env var | Purpose |
 |------|--------|----------------|---------|
-| `infra` | `redeploy-stack.sh` | `INFRA_HOOK_SECRET` | fast-forwards `~/dev-lab` to `origin/main` then redeploys the whole stack; used for Caddyfile, compose, or hook-config changes |
+| `infra` | `redeploy-stack.sh` | `INFRA_HOOK_SECRET` | fast-forwards `~/infra` to `origin/main` then redeploys the whole stack; used for Caddyfile, compose, or hook-config changes |
 | `blog` | `redeploy-app.sh blog` | `BLOG_HOOK_SECRET` | pulls the new `ghcr.io/csdavenport6/cdavenport.io:latest` image and recreates only the blog service |
 
 `redeploy-app.sh` has a case-statement allowlist; to onboard a new app, add its service name to both `hooks.yml` and the allowlist in the script.
@@ -81,14 +81,14 @@ Expected: `HTTP 200` with body `infra redeploy triggered`. The container logs sh
    ```bash
    gh secret set DEPLOY_HOOK_SECRET --repo csdavenport6/<repo>
    ```
-4. On the droplet, replace the value in `/etc/dev-lab/webhook.env`, keeping file mode `0600` and owner `connor:connor`:
+4. On the droplet, replace the value in `/etc/infra/webhook.env`, keeping file mode `0600` and owner `connor:connor`:
    ```bash
    ssh -p 2222 connor@cdavenport.io
-   sudoedit /etc/dev-lab/webhook.env   # or: nano, then chmod 0600 + chown connor:connor
+   sudoedit /etc/infra/webhook.env   # or: nano, then chmod 0600 + chown connor:connor
    ```
 5. Restart the webhook container so it picks up the new env var:
    ```bash
-   cd ~/dev-lab && docker compose up -d webhook
+   cd ~/infra && docker compose up -d webhook
    ```
    `-hotreload` only watches `hooks.yml`; env changes require a container restart.
 6. Sanity-check with a signed POST (see above). Keep the previous secret around until the new one is verified in case of rollback.
@@ -99,16 +99,16 @@ Expected: `HTTP 200` with body `infra redeploy triggered`. The container logs sh
 |---------|-------------------|-----|
 | `HTTP 403 Hook rules were not satisfied.` | body was modified in transit, wrong secret, or client computed the HMAC over a different payload than it sent | re-fetch the secret from 1Password; hash exactly what curl sends (watch `printf '%s'` vs `echo` adding a newline) |
 | `HTTP 500 Error occurred while evaluating hook rules.` | signature header missing or empty (`sha256=`); webhook rejects malformed sigs before the trigger-rule check | verify `$SIG` has length 64 before sending; if empty, `$SECRET` was unset |
-| `curl: (35) ... tlsv1 alert internal error` on `deploy.cdavenport.io` | Caddy has no cert for the subdomain yet, or the running Caddy container is serving stale config | check `docker exec dev-lab-caddy-1 curl -s http://localhost:2019/config/apps/http/servers` to see loaded hosts; `docker compose up -d --force-recreate caddy` if hosts are stale (single-file bind-mount gotcha, [tracked follow-up](superpowers/plans/2026-04-19-split-blog-and-platform.md)) |
+| `curl: (35) ... tlsv1 alert internal error` on `deploy.cdavenport.io` | Caddy has no cert for the subdomain yet, or the running Caddy container is serving stale config | check `docker exec infra-caddy-1 curl -s http://localhost:2019/config/apps/http/servers` to see loaded hosts; `docker compose up -d --force-recreate caddy` if hosts are stale (single-file bind-mount gotcha, [tracked follow-up](superpowers/plans/2026-04-19-split-blog-and-platform.md)) |
 | hook edit in `hooks.yml` on `main` has no effect | webhook container was not recreated since the file changed | the `-hotreload` flag (in `docker-compose.yml` webhook `command`) watches `hooks.yml` for changes; if it's missing, `docker compose up -d --force-recreate webhook` |
-| `docker compose` inside the container fails with permission denied on `/etc/dev-lab/webhook.env` | env file is owned by root | `sudo chown -R connor:connor /etc/dev-lab && sudo chmod 0700 /etc/dev-lab && sudo chmod 0600 /etc/dev-lab/webhook.env` |
+| `docker compose` inside the container fails with permission denied on `/etc/infra/webhook.env` | env file is owned by root | `sudo chown -R connor:connor /etc/infra && sudo chmod 0700 /etc/infra && sudo chmod 0600 /etc/infra/webhook.env` |
 
 ## Observability
 
 Tail webhook activity:
 
 ```bash
-ssh -p 2222 connor@cdavenport.io "cd ~/dev-lab && docker compose logs -f webhook"
+ssh -p 2222 connor@cdavenport.io "cd ~/infra && docker compose logs -f webhook"
 ```
 
 Key log lines:
@@ -124,7 +124,7 @@ Because the webhook runs inside the same `docker-compose` stack it deploys, a br
 
 ```bash
 ssh -p 2222 connor@cdavenport.io
-cd ~/dev-lab
+cd ~/infra
 git reset --hard origin/main
 docker compose up -d --wait
 ```

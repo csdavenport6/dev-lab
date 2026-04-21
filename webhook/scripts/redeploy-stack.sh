@@ -27,10 +27,10 @@ fi
 docker run --detach --rm \
     -v /var/run/docker.sock:/var/run/docker.sock \
     -v "${HOST_REPO_PATH}:${HOST_REPO_PATH}" \
-    -v /etc/dev-lab:/etc/dev-lab:ro \
+    -v /etc/infra:/etc/infra:ro \
     -w "${HOST_REPO_PATH}" \
     --entrypoint sh \
-    dev-lab-webhook \
+    infra-webhook \
     -c '
         set -eu
         sleep 3

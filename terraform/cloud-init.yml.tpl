@@ -30,7 +30,7 @@ packages:
   - git
 
 write_files:
-  - path: /etc/ssh/sshd_config.d/60-dev-lab.conf
+  - path: /etc/ssh/sshd_config.d/60-infra.conf
     content: |
       Port ${ssh_port}
       PermitRootLogin no
@@ -51,10 +51,10 @@ write_files:
       APT::Periodic::Update-Package-Lists "1";
       APT::Periodic::Unattended-Upgrade "1";
 
-  - path: /etc/systemd/system/dev-lab.service
+  - path: /etc/systemd/system/infra.service
     content: |
       [Unit]
-      Description=dev-lab docker compose stack
+      Description=infra docker compose stack
       Requires=docker.service
       After=docker.service
 
@@ -62,9 +62,9 @@ write_files:
       Type=oneshot
       RemainAfterExit=yes
       User=${username}
-      WorkingDirectory=/home/${username}/dev-lab
+      WorkingDirectory=/home/${username}/infra
       Environment=SKIP_GIT_PULL=1
-      ExecStart=/home/${username}/dev-lab/scripts/deploy.sh
+      ExecStart=/home/${username}/infra/scripts/deploy.sh
       ExecStop=/usr/bin/docker compose down
 
       [Install]
@@ -100,12 +100,12 @@ runcmd:
   # (invoked as ${username}) can read env_file paths. The secrets file
   # itself must be populated out-of-band by the operator on first boot
   # before the webhook service can pass authenticated hooks through.
-  - install -m 0700 -o ${username} -g ${username} -d /etc/dev-lab
-  - install -m 0600 -o ${username} -g ${username} /dev/null /etc/dev-lab/webhook.env
+  - install -m 0700 -o ${username} -g ${username} -d /etc/infra
+  - install -m 0600 -o ${username} -g ${username} /dev/null /etc/infra/webhook.env
 
   # Clone repo and start services
-  - git clone ${repo_url} /home/${username}/dev-lab
-  - chown -R ${username}:${username} /home/${username}/dev-lab
+  - git clone ${repo_url} /home/${username}/infra
+  - chown -R ${username}:${username} /home/${username}/infra
   - systemctl daemon-reload
-  - systemctl enable dev-lab
-  - systemctl start dev-lab
+  - systemctl enable infra
+  - systemctl start infra

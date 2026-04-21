@@ -12,7 +12,7 @@ data "digitalocean_ssh_key" "main" {
 }
 
 resource "digitalocean_droplet" "web" {
-  name     = "dev-lab"
+  name     = "infra"
   image    = var.image
   size     = var.size
   region   = var.region
@@ -25,11 +25,11 @@ resource "digitalocean_droplet" "web" {
     repo_url       = var.repo_url
   })
 
-  tags = ["dev-lab"]
+  tags = ["infra"]
 }
 
 resource "digitalocean_firewall" "web" {
-  name        = "dev-lab-firewall"
+  name        = "infra-firewall"
   droplet_ids = [digitalocean_droplet.web.id]
 
   inbound_rule {

@@ -12,7 +12,7 @@ data "hcloud_ssh_key" "main" {
 }
 
 resource "hcloud_firewall" "web" {
-  name = "dev-lab-firewall"
+  name = "infra-firewall"
 
   rule {
     direction  = "in"
@@ -44,7 +44,7 @@ resource "hcloud_firewall" "web" {
 }
 
 resource "hcloud_server" "web" {
-  name         = "dev-lab"
+  name         = "infra"
   image        = var.image
   server_type  = var.server_type
   location     = var.location
@@ -59,6 +59,6 @@ resource "hcloud_server" "web" {
   })
 
   labels = {
-    project = "dev-lab"
+    project = "infra"
   }
 }

@@ -1,4 +1,4 @@
-# dev-lab
+# infra
 
 Infrastructure and platform repo for cdavenport.io. Provisions a DigitalOcean (or Hetzner) droplet with Terraform, configures it with cloud-init, and runs the application stack (Caddy + [adnanh/webhook](https://github.com/adnanh/webhook) + N applications) with Docker Compose.
 
@@ -25,8 +25,8 @@ Applications run from pre-built images pulled from public registries; their sour
    - Add a Terraform A record for the hostname.
    - Add a hook entry to `webhook/hooks.yml` (reuse `redeploy-app.sh <service-name>` for per-app hooks).
    - Extend the `case` allowlist in `webhook/scripts/redeploy-app.sh` to include the new service name.
-3. Add a matching `<APP>_HOOK_SECRET` line to `/etc/dev-lab/webhook.env` on the droplet, record the secret in 1Password, and set `DEPLOY_HOOK_SECRET` in the new app's repo secrets.
-4. `terraform apply` for the DNS record, then merge the dev-lab PR; the infra hook brings the new service up.
+3. Add a matching `<APP>_HOOK_SECRET` line to `/etc/infra/webhook.env` on the droplet, record the secret in 1Password, and set `DEPLOY_HOOK_SECRET` in the new app's repo secrets.
+4. `terraform apply` for the DNS record, then merge the infra PR; the infra hook brings the new service up.
 
 ## Operating
 
