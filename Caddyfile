@@ -3,6 +3,7 @@ cdavenport.io {
     reverse_proxy blog:8080
 }
 
+# Canonicalize www to apex.
 www.cdavenport.io {
     redir https://cdavenport.io{uri} permanent
 }
