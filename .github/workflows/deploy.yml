@@ -10,37 +10,36 @@ concurrency:
   group: production-deploy
   cancel-in-progress: false
 
+env:
+  DEPLOY_HOOK_URL: https://deploy.cdavenport.io/hooks/infra
+
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+      - name: terraform fmt check
+        run: terraform -chdir=terraform fmt -check -recursive
+      - name: terraform init -backend=false
+        run: terraform -chdir=terraform init -backend=false -input=false
+      - name: terraform validate
+        run: terraform -chdir=terraform validate
+
   deploy:
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
-
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Configure SSH key
+      - name: Trigger infra redeploy
         env:
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOOK_SECRET: ${{ secrets.DEPLOY_HOOK_SECRET }}
         run: |
-          install -m 700 -d ~/.ssh
-          printf '%s' "$DEPLOY_SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-      - name: Validate SSH key format
-        run: ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
-
-      - name: Trust deploy host key
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-        run: ssh-keyscan -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
-
-      - name: Deploy over SSH
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            'cd ~/dev-lab && git fetch origin main && git checkout main && git pull --ff-only origin main && SKIP_GIT_PULL=1 ./scripts/deploy.sh'
+          sig=$(printf '' | openssl dgst -sha256 -hmac "$DEPLOY_HOOK_SECRET" | awk '{print $2}')
+          curl --fail --show-error -sS -X POST \
+            -H "X-Hub-Signature-256: sha256=$sig" \
+            --data '' \
+            "$DEPLOY_HOOK_URL"
