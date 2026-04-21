@@ -10,3 +10,19 @@
       parameter:
         source: header
         name: X-Hub-Signature-256
+
+- id: blog
+  execute-command: /scripts/redeploy-app.sh
+  command-working-directory: /workspace
+  pass-arguments-to-command:
+    - source: string
+      name: blog
+  response-message: "blog redeploy triggered"
+  trigger-rule-mismatch-http-response-code: 403
+  trigger-rule:
+    match:
+      type: payload-hmac-sha256
+      secret: '{{getenv "BLOG_HOOK_SECRET"}}'
+      parameter:
+        source: header
+        name: X-Hub-Signature-256
